@@ -1,0 +1,227 @@
+Tu es un expert React/TypeScript. Tu as accès à deux projets dans mon workspace :
+
+- `adria-treasury/`       → projet Trésorerie (BASE du livrable final)
+- `adria-rapprochement/`  → projet Rapprochement (SOURCE de vérité)
+
+---
+
+## TA MISSION EN UNE PHRASE
+
+Remplacer les pages du module Rapprochement défectueuses dans 
+`adria-treasury/` par les pages correctes de `adria-rapprochement/`,
+et corriger le menu latéral pour qu'il affiche un sous-menu 
+Rapprochement au survol — le tout en respectant les rôles.
+
+---
+
+## ÉTAPE 0 — LIRE AVANT TOUT
+
+Avant d'écrire la moindre ligne de code, parcours les deux projets 
+et identifie :
+
+1. Dans `adria-treasury/` :
+   - La structure exacte des dossiers (pages, components, hooks, 
+     services, types, routes)
+   - Le système d'auth utilisé (AuthContext ? Zustand ? Redux ?)
+   - Le système de routing (React Router v6 ? Next.js app router ?)
+   - L'emplacement exact des fichiers Rapprochement défectueux
+   - L'emplacement et le code du menu latéral actuel (Sidebar)
+
+2. Dans `adria-rapprochement/` :
+   - La liste complète de toutes les pages et composants
+   - Les hooks, services, types et données mockées spécifiques
+   - Les statuts métier utilisés (voir section "Statuts" plus bas)
+   - La page de login (à ne PAS copier)
+
+Dis-moi ce que tu as trouvé avant de continuer.
+
+---
+
+## ÉTAPE 1 — SUPPRIMER les fichiers Rapprochement défectueux
+
+Dans `adria-treasury/`, supprime uniquement :
+- Toutes les pages, composants et routes liés au module Rapprochement
+- Les entrées de menu Rapprochement dans le Sidebar actuel
+- NE TOUCHE à aucune autre page Trésorerie — elles restent intactes
+
+---
+
+## ÉTAPE 2 — COPIER les pages depuis `adria-rapprochement/`
+
+Copie depuis `adria-rapprochement/` vers `adria-treasury/src/modules/reconciliation/` 
+les éléments suivants, SANS les réécrire (copie le code tel quel) :
+
+Pages à copier :
+- Dashboard Rapprochement
+- Référentiels Fournisseurs (liste, création, modification)
+- Référentiels Clients (liste, création, modification)
+- Factures Reçues (liste, création, import OCR)
+- Factures Émises (liste, création)
+- Rapprochement manuel + suggestions intelligentes + proactif
+- Workflow de justification des écarts
+- Historique des rapprochements
+- Rapports : État de Rapprochement, CPC, Déclaration TVA
+- File de validation des justifications (Admin Client)
+- Règles de rapprochement (Admin Client)
+- Gestion des utilisateurs (Admin Client)
+- Paramètres entreprise (Admin Client)
+
+Fichiers utilitaires à copier également :
+- Tous les hooks spécifiques au module Rapprochement
+- Tous les services/API calls de ce module
+- Les types TypeScript de ce module
+- Les données mockées de ce module
+- Le moteur de rapprochement (matching-engine ou équivalent)
+
+NE PAS copier :
+- La page de login de `adria-rapprochement/`
+- Les fichiers d'auth de `adria-rapprochement/`
+
+Structure cible dans `adria-treasury/` :
+
+src/modules/reconciliation/
+├── dashboard/
+├── referentials/
+│   ├── suppliers/
+│   └── clients/
+├── invoices/
+│   ├── received/
+│   └── issued/
+├── matching/
+├── justification/
+├── history/
+└── reports/
+    ├── statement/
+    ├── cpc/
+    └── vat/
+
+---
+
+## ÉTAPE 3 — CORRIGER les routes
+
+Dans le système de routing de `adria-treasury/`, ajoute les routes 
+pour toutes les pages copiées en respectant cette matrice d'accès :
+
+| Page / Route                | TRESORIER | ADMIN_CLIENT |
+|-----------------------------|-----------|--------------|
+| Dashboard Rapprochement     | ✅        | ❌           |
+| Fournisseurs & Clients      | ✅        | ❌           |
+| Factures Reçues & Émises    | ✅        | ❌           |
+| Rapprochement (tout)        | ✅        | ❌           |
+| Rapports État/CPC/TVA       | ✅        | ✅           |
+| File de validation          | ❌        | ✅           |
+| Règles de rapprochement     | ❌        | ✅           |
+| Gestion utilisateurs        | ❌        | ✅           |
+| Paramètres entreprise       | ❌        | ✅           |
+
+Chaque route protégée doit vérifier le rôle et rediriger vers 
+/unauthorized si l'accès est refusé.
+
+---
+
+## ÉTAPE 4 — CORRIGER le menu latéral (point le plus important)
+
+Le menu latéral de `adria-treasury/` doit être modifié pour 
+implémenter un DOUBLE menu latéral :
+
+### Menu principal (toujours visible à gauche)
+
+Contenu selon le rôle connecté :
+
+TRESORIER :
+  - Tableau de Bord
+  - Suivi des Comptes
+  - Flux Déclarés
+  - Prévision Trésorerie
+  - Rapprochement  ← avec chevron › et badge rouge (nb d'éléments en attente)
+  - Multi-devises
+  - Interface ERP/EBICS
+  - Alertes
+  - Reporting
+
+ADMIN_CLIENT :
+  - Tableau de Bord
+  - Référentiels
+  - Factures Reçues
+  - Factures Émises
+  - Rapprochement  ← avec chevron › et badge rouge
+  - Rapports
+
+BACKOFFICE / ADMIN_BANQUE :
+  - Leurs menus respectifs, SANS item Rapprochement
+
+### Menu secondaire (slide-in au survol de "Rapprochement")
+
+Quand la souris survole l'item "Rapprochement" dans le menu principal,
+un SECOND panneau s'affiche immédiatement à droite du premier 
+par animation slide-in.
+
+Ce second panneau est un composant React séparé (SecondarySidebar).
+Il est MONTÉ/DÉMONTÉ dans le DOM selon l'état hover — 
+pas un simple display:none.
+
+Pour TRESORIER, le menu secondaire affiche :
+  - Dashboard Rapprochement
+  - ── Référentiels
+       - Fournisseurs
+       - Clients
+  - ── Factures
+       - Factures Reçues
+       - Factures Émises
+  - Rapprochement (vue active)
+  - ── Rapports
+       - État de Rapprochement
+       - CPC
+       - Déclaration TVA
+
+Pour ADMIN_CLIENT, le menu secondaire affiche :
+  - Dashboard Admin
+  - File de Validation
+  - Règles de Rapprochement
+  - Gestion Utilisateurs
+  - Paramètres Entreprise
+
+Comportement exact du hover :
+  - Le survol de "Rapprochement" dans le menu principal ouvre le 
+    menu secondaire (onMouseEnter)
+  - Le menu secondaire reste ouvert si la souris se déplace dessus
+  - Il se ferme seulement quand la souris quitte LES DEUX menus 
+    (utilise un délai de 150ms pour éviter la fermeture accidentelle 
+    pendant le déplacement de la souris entre les deux panneaux)
+  - Sur mobile : tap sur "Rapprochement" toggle le menu secondaire 
+    en dessous, en accordion
+
+Le badge rouge sur l'item "Rapprochement" :
+  - Affiche le total de (suggestions en attente + écarts non justifiés)
+  - Récupère cette valeur depuis le même mécanisme de state 
+    déjà utilisé dans `adria-treasury/` (Context ou store existant)
+  - Reste visible même quand le menu secondaire est fermé
+
+---
+
+## CONTRAINTES ABSOLUES
+
+1. Ne réécris jamais une page from scratch — copie le code existant 
+   de `adria-rapprochement/` tel quel
+
+2. Conserve le design visuel de chaque projet tel quel — 
+   ne pas harmoniser les styles entre les deux projets
+
+3. Les statuts métier suivants ne doivent jamais être modifiés :
+   - Factures : RAPPROCHE, ECART_DETECTE, NON_RAPPROCHE, 
+     JUSTIFIE, SUGGESTION_EN_ATTENTE
+   - Rapprochements : RAPPROCHEE, ECART_DETECTE, 
+     NON_RAPPROCHEE, SUGGESTION
+
+4. Les données mockées et appels API des deux projets 
+   restent intacts
+
+5. Si un type TypeScript entre en conflit entre les deux projets, 
+   le type de `adria-rapprochement/` est prioritaire pour 
+   tout ce qui concerne le périmètre Rapprochement
+
+6. Ne touche à aucune page Trésorerie existante 
+   (dashboard, comptes, flux, prévisions, etc.)
+
+7. Procède étape par étape et montre-moi les fichiers modifiés 
+   après chaque étape avant de passer à la suivante
