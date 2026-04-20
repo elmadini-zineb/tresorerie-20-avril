@@ -43,12 +43,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await new Promise((resolve) => setTimeout(resolve, 800))
 
     const normalizedEmail = email.trim().toLowerCase()
+    console.log('[v0] Login attempt with email:', normalizedEmail)
+    console.log('[v0] Available users:', mockAuthUsers.map(u => u.email))
+    
     const matchedUser = mockAuthUsers.find(
       (candidate) =>
         candidate.email.toLowerCase() === normalizedEmail && candidate.password === password
     )
 
+    console.log('[v0] Matched user:', matchedUser)
+
     if (!matchedUser) {
+      console.log('[v0] Login failed: no matching user')
       return false
     }
 
@@ -61,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(authenticatedUser)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(authenticatedUser))
+    console.log('[v0] Login successful:', authenticatedUser)
     return true
   }
 

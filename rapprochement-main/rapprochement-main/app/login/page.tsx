@@ -36,18 +36,23 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
+      console.log('[v0] Calling login function with email:', email)
       const success = await login(email, password)
+      console.log('[v0] Login result:', success)
       if (success) {
         const normalizedEmail = email.trim().toLowerCase()
+        console.log('[v0] Login successful, redirecting to:', normalizedEmail === 'admin@adria.ma' || normalizedEmail === 'admin.banque@adria.ma' ? '/admin' : '/dashboard')
         if (normalizedEmail === 'admin@adria.ma' || normalizedEmail === 'admin.banque@adria.ma') {
           router.push('/admin')
         } else {
           router.push('/dashboard')
         }
       } else {
+        console.log('[v0] Login failed: invalid credentials')
         toast.error('Identifiants incorrects')
       }
-    } catch {
+    } catch (err) {
+      console.log('[v0] Login error:', err)
       toast.error('Identifiants incorrects')
     } finally {
       setIsLoading(false)
