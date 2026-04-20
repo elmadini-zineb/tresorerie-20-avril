@@ -38,12 +38,7 @@ export default function LoginPage() {
     try {
       const success = await login(email, password)
       if (success) {
-        const normalizedEmail = email.trim().toLowerCase()
-        if (normalizedEmail === 'admin@adria.ma' || normalizedEmail === 'admin.banque@adria.ma') {
-          router.push('/admin')
-        } else {
-          router.push('/dashboard')
-        }
+        router.push('/dashboard')
       } else {
         toast.error('Identifiants incorrects')
       }

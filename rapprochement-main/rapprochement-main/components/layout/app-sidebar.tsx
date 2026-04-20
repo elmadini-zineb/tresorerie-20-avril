@@ -129,7 +129,7 @@ function TvaIcon({ className }: IconProps) {
 }
 
 const adminNavItems: NavItem[] = [
-  { label: 'Tableau de bord', href: '/admin', icon: LayoutDashboard },
+  { label: 'Tableau de bord admin', href: '/admin', icon: LayoutDashboard },
   { label: 'File de validation', href: '/admin/validation', icon: ClipboardList },
   { label: 'Configuration règles', href: '/admin/configuration', icon: Sliders },
   { label: 'Gestion utilisateurs', href: '/admin/utilisateurs', icon: UserCheck },
@@ -387,20 +387,7 @@ export function AppSidebar() {
       </div>
 
       <nav className="h-[calc(100vh-64px)] overflow-y-auto px-0 py-3">
-        {isAdmin ? (
-          adminNavItems.map((item, index) => (
-            <div key={item.href}>
-              {index > 0 && (
-                <div
-                  className="mx-4 my-2 border-t"
-                  style={{ borderTopWidth: '0.5px', borderColor: 'rgba(255,255,255,0.08)' }}
-                />
-              )}
-              {renderItem(item)}
-            </div>
-          ))
-        ) : (
-          tresorierBlocks.map((block, index) => (
+          {tresorierBlocks.map((block, index) => (
             <div key={block.type === 'item' ? block.item.href : block.section.label}>
               {index > 0 && (
                 <div
@@ -408,7 +395,6 @@ export function AppSidebar() {
                   style={{ borderTopWidth: '0.5px', borderColor: 'rgba(255,255,255,0.08)' }}
                 />
               )}
-
               {block.type === 'item' ? (
                 renderItem(block.item)
               ) : (
@@ -420,8 +406,20 @@ export function AppSidebar() {
                 </div>
               )}
             </div>
-          ))
-        )}
+          ))}
+
+          {isAdmin && (
+            <>
+              <div
+                className="mx-4 my-2 border-t"
+                style={{ borderTopWidth: '0.5px', borderColor: 'rgba(255,255,255,0.08)' }}
+              />
+              <div className="px-4 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-widest text-[rgba(255,255,255,0.35)]">
+                Administration
+              </div>
+              {adminNavItems.map((item) => renderItem(item))}
+            </>
+          )}
       </nav>
     </aside>
   )

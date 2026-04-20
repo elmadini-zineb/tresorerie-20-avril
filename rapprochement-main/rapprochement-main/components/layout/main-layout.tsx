@@ -20,7 +20,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   useEffect(() => {
     if (pathname === '/login' && isAuthenticated && user) {
-      router.push(isAdmin ? '/admin' : '/dashboard')
+      router.push('/dashboard')
       return
     }
 
@@ -31,18 +31,16 @@ export function MainLayout({ children }: MainLayoutProps) {
       return
     }
 
-    if (isAdmin && !pathname.startsWith('/admin') && pathname !== '/parametres') {
-      router.push('/admin')
-      return
-    }
-
-    if (!isAdmin && pathname.startsWith('/admin')) {
+    // TRESORIER cannot access rapprochement or admin pages
+    if (user?.role === 'TRESORIER' && (pathname.startsWith('/rapprochement') || pathname.startsWith('/admin'))) {
       router.push('/dashboard')
       return
     }
 
-    if (!isAdmin && pathname === '/parametres') {
+    // ADMIN_CLIENT cannot access admin pages
+    if (user?.role === 'ADMIN_CLIENT' && pathname.startsWith('/admin')) {
       router.push('/dashboard')
+      return
     }
   }, [isAuthenticated, user, pathname, router, isAdmin])
 
