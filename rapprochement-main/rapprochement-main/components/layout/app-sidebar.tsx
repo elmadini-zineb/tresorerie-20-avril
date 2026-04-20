@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -11,7 +12,10 @@ import {
   UserCheck,
   ClipboardList,
   Sliders,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import type { InvoiceStatus } from '@/lib/types'
 
 interface NavItem {
@@ -20,6 +24,7 @@ interface NavItem {
   icon: React.ElementType
   badgeCount?: number
   badgeTone?: 'muted' | 'amber'
+  isExpandable?: boolean
 }
 
 interface NavSection {
@@ -135,6 +140,28 @@ export function AppSidebar() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { user } = useAuth()
+  const [rapprochementOpen, setRapprochementOpen] = useState(false)
+
+  // Load sidebar state from localStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('rapprochement-sidebar-open')
+    if (savedState !== null) {
+      setRapprochementOpen(JSON.parse(savedState))
+    }
+  }, [])
+
+  // Auto-expand when navigating to rapprochement paths
+  useEffect(() => {
+    if (pathname.startsWith('/rapprochement')) {
+      setRapprochementOpen(true)
+    }
+  }, [pathname])
+
+  // Save sidebar state to localStorage
+  const handleRapprochementOpenChange = (open: boolean) => {
+    setRapprochementOpen(open)
+    localStorage.setItem('rapprochement-sidebar-open', JSON.stringify(open))
+  }
 
   const isAdmin = user?.role === 'ADMIN_CLIENT' || user?.role === 'ADMIN_BANQUE'
 
@@ -181,16 +208,22 @@ export function AppSidebar() {
         ],
       },
     },
-    {
-      type: 'item',
-      item: {
-        label: 'Rapprochement',
-        href: '/rapprochement',
-        icon: RapprochementIcon,
-        badgeCount: ecartDetecteCount,
-        badgeTone: 'amber',
-      },
-    },
+    // Only ADMIN users can see Rapprochement
+    ...(user?.role !== 'TRESORIER'
+      ? [
+          {
+            type: 'item' as const,
+            item: {
+              label: 'Rapprochement',
+              href: '/rapprochement',
+              icon: RapprochementIcon,
+              badgeCount: ecartDetecteCount,
+              badgeTone: 'amber' as const,
+              isExpandable: true,
+            },
+          },
+        ]
+      : []),
     {
       type: 'section',
       section: {
@@ -219,7 +252,88 @@ export function AppSidebar() {
     return pathname.startsWith(href) && href !== '/'
   }
 
+  const renderRapprochementSubItems = () => {
+    // Only ADMIN_BANQUE can see sub-items
+    if (user?.role !== 'ADMIN_BANQUE') {
+      return null
+    }
+
+    const subItems = [
+      { label: 'Détails de Rapprochement', href: '/rapprochement/details' },
+      { label: 'Historique', href: '/rapprochement/historique' },
+    ]
+
+    return subItems.map((item) => {
+      const active = isActive(item.href)
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={cn(
+            'ml-3 block border-l-[3px] px-4 py-2 text-sm transition-colors rounded-none',
+            active
+              ? 'border-l-[#3B6FD4] bg-[#1B2E5E] font-medium text-white'
+              : 'border-l-transparent bg-transparent font-normal text-[rgba(255,255,255,0.55)] hover:bg-[rgba(255,255,255,0.04)] hover:text-[rgba(255,255,255,0.8)]'
+          )}
+        >
+          <span className="truncate">{item.label}</span>
+        </Link>
+      )
+    })
+  }
+
   const renderItem = (item: NavItem, compact = false) => {
+    if (item.isExpandable) {
+      return (
+        <Collapsible key={item.href} open={rapprochementOpen} onOpenChange={handleRapprochementOpenChange}>
+          <CollapsibleTrigger asChild>
+            <button
+              className={cn(
+                'w-full group flex items-center justify-between border-l-[3px] px-4 py-2 text-sm transition-colors rounded-none text-left',
+                rapprochementOpen
+                  ? 'border-l-[#3B6FD4] bg-[#1B2E5E] font-medium text-white'
+                  : 'border-l-transparent bg-transparent font-normal text-[rgba(255,255,255,0.65)] hover:bg-[rgba(255,255,255,0.06)] hover:text-[rgba(255,255,255,0.9)]'
+              )}
+            >
+              <span className="flex min-w-0 items-center gap-3">
+                <item.icon
+                  className={cn(
+                    'h-4 w-4 shrink-0 transition-opacity',
+                    rapprochementOpen ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'
+                  )}
+                />
+                <span className="truncate">{item.label}</span>
+              </span>
+
+              <span className="flex items-center gap-2">
+                {typeof item.badgeCount === 'number' && (
+                  <span
+                    className={cn(
+                      'min-w-5 rounded px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none',
+                      item.badgeTone === 'amber'
+                        ? 'bg-[#F59E0B]/20 text-[#FBBF24]'
+                        : 'bg-[rgba(255,255,255,0.12)] text-[rgba(255,255,255,0.78)]'
+                    )}
+                  >
+                    {item.badgeCount}
+                  </span>
+                )}
+                {rapprochementOpen ? (
+                  <ChevronDown className="h-4 w-4 shrink-0" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 shrink-0" />
+                )}
+              </span>
+            </button>
+          </CollapsibleTrigger>
+
+          <CollapsibleContent className="space-y-1 px-0 py-1">
+            {renderRapprochementSubItems()}
+          </CollapsibleContent>
+        </Collapsible>
+      )
+    }
+
     const active = isActive(item.href)
     const Icon = item.icon
 

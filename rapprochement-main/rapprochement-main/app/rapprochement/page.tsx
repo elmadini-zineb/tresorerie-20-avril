@@ -26,6 +26,8 @@ import type { Reconciliation } from '@/lib/types'
 import { formatAmount, formatDate, getScoreColor, getScoreBgClass } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useAuth } from '@/lib/auth-context'
+import { redirect } from 'next/navigation'
 
 const allReconciliations = [...reconciliations, ...additionalReconciliations]
 
@@ -37,6 +39,18 @@ export default function RapprochementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set(['r2', 'r5']))
   const [isRunning, setIsRunning] = useState(false)
+
+  const { user } = useAuth()
+
+  // Redirect if not authenticated
+  if (!user) {
+    redirect('/login')
+  }
+
+  // Redirect TRÉSORIER users - they don't have access to rapprochement
+  if (user.role === 'TRESORIER') {
+    redirect('/dashboard')
+  }
 
   const tiers = tiersFilter === 'fournisseurs' ? fournisseurs : clients
 
