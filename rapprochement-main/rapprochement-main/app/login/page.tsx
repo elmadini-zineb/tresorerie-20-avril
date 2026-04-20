@@ -36,24 +36,19 @@ export default function LoginPage() {
 
     setIsLoading(true)
     try {
-      console.log('[v0] Calling login function with email:', email)
       const success = await login(email, password)
-      console.log('[v0] Login result:', success)
       if (success) {
         const normalizedEmail = email.trim().toLowerCase()
-        console.log('[v0] Login successful, redirecting to:', normalizedEmail === 'admin@adria.ma' || normalizedEmail === 'admin.banque@adria.ma' ? '/admin' : '/dashboard')
         if (normalizedEmail === 'admin@adria.ma' || normalizedEmail === 'admin.banque@adria.ma') {
           router.push('/admin')
         } else {
           router.push('/dashboard')
         }
       } else {
-        console.log('[v0] Login failed: invalid credentials')
         toast.error('Identifiants incorrects')
       }
-    } catch (err) {
-      console.log('[v0] Login error:', err)
-      toast.error('Identifiants incorrects')
+    } catch {
+      toast.error('Une erreur est survenue')
     } finally {
       setIsLoading(false)
     }
@@ -133,6 +128,28 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+
+          <div className="mt-6 rounded-lg border border-[#DDE3EF] bg-[#F4F6FB] p-4">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#64748B]">Comptes de demo</p>
+            <div className="space-y-2">
+              {[
+                { role: 'Tresorier', email: 'tresorier@adria.ma' },
+                { role: 'Admin Client', email: 'admin@adria.ma' },
+                { role: 'Admin Banque', email: 'admin.banque@adria.ma' },
+              ].map((account) => (
+                <button
+                  key={account.email}
+                  type="button"
+                  onClick={() => { setEmail(account.email); setPassword('password') }}
+                  className="flex w-full items-center justify-between rounded border border-[#DDE3EF] bg-white px-3 py-2 text-left transition-colors hover:border-[#3B6FD4] hover:bg-[#EEF3FF]"
+                >
+                  <span className="text-xs font-medium text-[#1B2E5E]">{account.role}</span>
+                  <span className="text-xs text-[#64748B]">{account.email}</span>
+                </button>
+              ))}
+              <p className="pt-1 text-center text-[11px] text-[#64748B]">Mot de passe : <span className="font-mono font-semibold">password</span></p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
